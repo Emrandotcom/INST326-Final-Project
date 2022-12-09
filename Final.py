@@ -6,36 +6,59 @@ Date: 11/29/2022
 INST326-ESG1 Farmer Fall 2022
 """
 
-# Import the csv and argparse modules
 import csv
 import argparse
 
-# Define a function to parse the command-line arguments
-def parse_args():
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--csv', required=True, help= 'Path to the CSV file containing the classes')
-  parser.add_argument('--semesters', type=int, required=True, help= 'Number of semesters to generate a course plan for')
-  parser.add_argument('--output', help= 'Path to the output file where the course plan will be saved')
-  return parser.parse_args()
+'''Student class creates a student with 1 attribute: credits'''
+class Student:
 
-# Define a function to read the classes from the CSV file
-def read_classes(csv_file):
-  # Initialize an empty dictionary to store the classes
+  def __init__(self,credits):
+    self.credits = credits
+
+
+'''Function to read the courses from CSV file'''
+def read_classes(input_file):
   classes = {}
 
-  # Open the CSV file and create a reader object to read the data
-  with open(csv_file, 'r') as file:
+  with open(input_file, 'r') as file:
     reader = csv.reader(file)
 
-    # Loop through the rows of the CSV file
     for row in reader:
-      # Get the semester and class name from the row
+
       semester = row[0]
       class_name = row[1]
 
-      # Check if the semester exists in the dictionary
       if semester not in classes:
-        # If the semester does not exist, add it to the dictionary
         classes[semester] = []
 
+      classes[semester].append(class_name)
 
+  return classes
+
+''' Function creates the course plan with attributes: semesters, classes '''
+def create_plan(semesters, classes):
+
+  plan = []
+
+  for semester in range(1, semesters+1):
+
+    if semester in classes:
+      plan.extend(classes[semester])
+
+    else:
+      plan.append('')
+
+  return plan
+
+'''Define a function to parse the command-line arguments'''
+def parse_args():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--input', required= True, help= 'Path to the CSV file containing the classes')
+  parser.add_argument('--semesters', type= int, required= True, help= 'Number of semesters to generate a course plan for')
+  parser.add_argument('--output', help= 'Path to the output file where the course plan will be saved')
+  return parser.parse_args()
+
+def main():
+
+  args = parse_args()
+  classes = read_classes
