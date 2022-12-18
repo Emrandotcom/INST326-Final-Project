@@ -8,57 +8,95 @@ INST326-ESG1 Farmer Fall 2022
 
 import csv
 import argparse
+import sys
 
 '''Student class creates a student with 1 attribute: credits'''
 class Student:
 
   def __init__(self,credits):
+
     self.credits = credits
 
+""" Function reads the courses from a CSV file and returns them as a list of lists"""
+def read_courses_from_csv(csv_file_name):
 
-'''Function to read the courses from CSV file'''
-def read_classes(input_file):
-  classes = {}
+    courses = []
 
-  with open(input_file, 'r') as file:
-    reader = csv.reader(file)
+    with open(csv_file_name, 'r') as csv_file:
 
-    for row in reader:
+        csv_reader = csv.reader(csv_file)
+        next(csv_reader)
 
-      semester = row[0]
-      class_name = row[1]
+        for row in csv_reader:
 
-      if semester not in classes:
-        classes[semester] = []
+            courses.append(row)
 
-      classes[semester].append(class_name)
+    return courses
 
-  return classes
+""" Function calculates the number of credits to take per semester"""
+def calculate_semester_credits(total_credits, num_semesters):
 
-''' Function creates the course plan with attributes: semesters, classes '''
-def create_plan(semesters, classes):
+    return total_credits // num_semesters
 
-  plan = []
+""" Function creates a semester plan by adding courses to the appropriate semester based on credits"""
+def create_semester_plan(courses, semester_credits):
 
-  for semester in range(1, semesters+1):
+    semesters = []
 
-    if semester in classes:
-      plan.extend(classes[semester])
+    for course in courses:
 
-    else:
-      plan.append('')
+        credits = int(course[1])
 
-  return plan
+        most_available_semester = None
+        most_available_credits = 0
 
-'''Define a function to parse the command-line arguments'''
-def parse_args():
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--input', required= True, help= 'Path to the CSV file containing the classes')
-  parser.add_argument('--semesters', type= int, required= True, help= 'Number of semesters to generate a course plan for')
-  parser.add_argument('--output', help= 'Path to the output file where the course plan will be saved')
-  return parser.parse_args()
+        for semester in semesters:
 
-def main():
+            if semester['credits'] > most_available_credits:
 
-  args = parse_args()
-  classes = read_classes
+                most_available_semester = semester
+                most_available_credits = semester['credits']
+
+        if most_available_credits >= credits:
+
+            most_available_semester['courses'].append(course[0])
+            most_available_semester['credits'] -= credits
+
+        else:
+
+            semesters.append({'courses': [course[0]], 'credits': semester_credits - credits})
+    
+    return semesters
+
+""" Function prints the semester plan"""
+def print_semester_plan(semesters):
+
+    for i, semester in enumerate(semesters):
+
+        print(f"Semester {i+1}:")
+
+        for course in semester['courses']:
+
+            print(f" - {course}")
+
+def main(csv_file, transfer_credits):
+
+    courses = read_courses_from_csv(csv_file)
+    student = Student(transfer_credits)
+    total_credits = 120 - student.credits
+    semester_credits = calculate_semester_credits(total_credits, 4)
+    semesters = create_semester_plan(courses, semester_credits)
+    print_semester_plan(semesters)
+
+"""Parses the command line arguments"""
+def parse_args(args_list):
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('csv_file', help='the CSV file containing the list of courses')
+    parser.add_argument('transfer_credits', type=int, help='the number of credits being transferred in')
+    return parser.parse_args(args_list)
+
+if __name__ == '__main__':
+
+    args = parse_args(sys.argv[1:])
+    main(args.csv_file, args.transfer_credits)
